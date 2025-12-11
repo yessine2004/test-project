@@ -1,0 +1,88 @@
+\documentclass[11pt]{article}
+\usepackage[letterpaper, margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{xcolor}
+
+% Define colors for status visual aids
+\definecolor{SuccessGreen}{RGB}{46, 139, 87}
+\definecolor{FailureRed}{RGB}{178, 34, 34}
+\definecolor{TotalBlue}{RGB}{0, 102, 204}
+
+\title{QA Automation Test Execution Report}
+\author{QA Automation Expert}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\section*{1. Executive Summary}
+
+This document provides a summary of the latest automated test execution run. The test suite identified significant functional regressions, resulting in a 60.00\% pass rate. Immediate investigation into the 10 identified failures is required.
+
+\vspace{0.5em}
+
+\section{Test Execution Summary}
+
+The execution involved 25 collected and executed test cases, completing in 405.19 seconds.
+
+\begin{table}[h]
+    \centering
+    \caption{Overall Execution Metrics}
+    \label{tab:summary}
+    \begin{tabular}{l l r}
+        \toprule
+        \textbf{Metric} & \textbf{Status} & \textbf{Count / Value} \\
+        \midrule
+        Total Tests Collected & \color{TotalBlue} Collected & 25 \\
+        Total Tests Executed & & 25 \\
+        \midrule
+        Passed Tests & \color{SuccessGreen} PASSED & 15 \\
+        Failed Tests & \color{FailureRed} FAILED & 10 \\
+        \midrule
+        \textbf{Success Rate} & & \textbf{60.00\%} \\
+        Total Duration & & 405.19 seconds \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\section{Detailed Failures}
+
+A total of 10 critical test cases failed during execution. This section details the identifier of the failing test and the recorded error message.
+
+\begin{longtable}{|p{0.50\textwidth}|p{0.35\textwidth}|}
+    \caption{List of Failed Test Cases (Total: 10)}
+    \label{tab:failures} \\
+    \toprule
+    \textbf{Test Case Identifier} & \textbf{Reported Error/Reason} \\
+    \midrule
+    \endfirsthead
+
+    \multicolumn{2}{c}{\tablename\ \thetable{} -- Continued} \\
+    \toprule
+    \textbf{Test Case Identifier} & \textbf{Reported Error/Reason} \\
+    \midrule
+    \endhead
+
+    \bottomrule
+    \endfoot
+
+    \bottomrule
+    \endlastfoot
+
+    tests/test\_functional.py::test\_search\_product & No error message \\
+    tests/test\_functional.py::test\_add\_to\_cart & No error message \\
+    tests/test\_functional.py::test\_create\_account\_valid & No error message \\
+    tests/test\_functional.py::test\_filter\_category & No error message \\
+    tests/test\_functional.py::test\_sort\_price & No error message \\
+    tests/test\_functional.py::test\_checkout\_without\_login & No error message \\
+    tests/test\_functional.py::test\_search\_invalid\_product & No error message \\
+    tests/test\_functional.py::test\_login\_invalid\_password & No error message \\
+    tests/test\_functional.py::test\_create\_account\_existing\_email & No error message \\
+    tests/test\_functional.py::test\_sql\_injection\_search & No error message \\
+
+\end{longtable}
+
+\end{document}
