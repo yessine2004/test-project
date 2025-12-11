@@ -24,5 +24,5 @@ def driver(request):
 # Paramétrisation pour plusieurs navigateurs
 @pytest.mark.parametrize("driver", ["chrome", "firefox", "edge"], indirect=True)
 def test_homepage_title(driver):
-    driver.get("https://tutorialsninja.com/demo/")
-    assert "Your Store" in driver.title
+    driver.get("https://demowebshop.tricentis.com/")
+    assert "Demo Web Shop" in driver.title
