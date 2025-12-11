@@ -45,7 +45,7 @@ def json_to_latex(json_path, output_path="report.tex"):
 
     # Construct the prompt with filtered data
     prompt = f"""
-    You are a QA automation expert. Convert the following Test Execution Report Summary into a professional LaTeX document.
+    You are a QA automation expert. Convert the following Test Execution Report Summary into a professional LaTeX document for the 'DemoWebShop' Migration Project.
     
     **Report Data:**
     - Total Duration: {duration:.2f} seconds

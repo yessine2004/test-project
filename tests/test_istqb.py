@@ -65,7 +65,7 @@ def test_state_transition_checkout(driver):
     
     # State 3: Shopping Cart
     driver.get(BASE_URL + "cart")
-    assert "Shopping cart" in driver.title
+    assert "Shopping Cart" in driver.title
     
     # Check Terms (Transition Guard)
     driver.find_element(By.ID, "termsofservice").click()

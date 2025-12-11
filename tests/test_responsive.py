@@ -12,11 +12,11 @@ def test_desktop_view(driver):
     time.sleep(1)  # Pause pour observer le changement de taille
 
     step("Ouverture de la page d'accueil")
-    driver.get("https://tutorialsninja.com/demo/")
+    driver.get("https://demowebshop.tricentis.com/")
     time.sleep(2)  # Pause pour observer le chargement
 
     step("Vérification de l'affichage du menu")
-    assert driver.find_element(By.ID, "menu").is_displayed()
+    assert driver.find_element(By.CSS_SELECTOR, ".top-menu").is_displayed()
     time.sleep(1)
 
 # Test : Vérification de l'affichage du menu en résolution tablette
@@ -26,11 +26,11 @@ def test_tablet_view(driver):
     time.sleep(1) 
 
     step("Ouverture de la page d'accueil")
-    driver.get("https://tutorialsninja.com/demo/")
+    driver.get("https://demowebshop.tricentis.com/")
     time.sleep(2) 
 
     step("Vérification de l'affichage du menu")
-    assert driver.find_element(By.ID, "menu").is_displayed()
+    assert driver.find_element(By.CSS_SELECTOR, ".top-menu").is_displayed()
     time.sleep(1) 
 
 # Test : Vérification de l'affichage du menu en résolution mobile
@@ -40,9 +40,11 @@ def test_mobile_view(driver):
     time.sleep(1) 
 
     step("Ouverture de la page d'accueil")
-    driver.get("https://tutorialsninja.com/demo/")
+    driver.get("https://demowebshop.tricentis.com/")
     time.sleep(2)  
 
     step("Vérification de l'affichage du menu")
-    assert driver.find_element(By.ID, "menu").is_displayed()
+    # On mobile, it might be the same menu or a different one depending on the site implementation.
+    # For DemoWebShop, checking existence of top-menu or header-menu is a safe bet for existence.
+    assert driver.find_element(By.CSS_SELECTOR, ".top-menu").is_displayed() or driver.find_element(By.CSS_SELECTOR, ".header-menu").is_displayed()
     time.sleep(1) 

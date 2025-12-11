@@ -7,7 +7,7 @@ def step(message):
 def test_homepage_load_time(driver):
     step("Mesure du temps de chargement de la page d'accueil")
     start = time.time()
-    driver.get("https://tutorialsninja.com/demo/")
+    driver.get("https://demowebshop.tricentis.com/")
     load_time = time.time() - start
     print(f"Homepage load time: {load_time:.2f}s")
     assert load_time < 5
@@ -18,9 +18,9 @@ def test_homepage_load_time(driver):
 def test_stress_load_multiple_pages(driver):
     step("Navigation sur plusieurs pages du site")
     urls = [
-        "https://tutorialsninja.com/demo/",
-        "https://tutorialsninja.com/demo/index.php?route=product/category&path=20",
-        "https://tutorialsninja.com/demo/index.php?route=account/login",
+        "https://demowebshop.tricentis.com/",
+        "https://demowebshop.tricentis.com/computers",
+        "https://demowebshop.tricentis.com/login",
     ]
     for url in urls:
         driver.get(url)

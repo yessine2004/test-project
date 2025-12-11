@@ -11,17 +11,17 @@ model = genai.GenerativeModel("gemini-flash-latest")
 
 def generate_test_case(feature):
     prompt = f"""
-    You are a QA Lead. Create a comprehensive manual test case for the following feature: "{feature}".
+    You are a QA Lead for the DemoWebShop e-commerce platform. Create a comprehensive manual test case for the following feature: "{feature}".
     
     Output structured Markdown:
     # Test Case: [Feature Name]
     
     | Field | Details |
     |---|---|
-    | **ID** | TC_GEN_001 |
-    | **Title** | Verify {feature} functionality |
+    | **ID** | TC_DWS_001 |
+    | **Title** | Verify {feature} functionality on DemoWebShop |
     | **Priority** | High |
-    | **Preconditions** | List relevant preconditions here. |
+    | **Preconditions** | List relevant preconditions here (e.g., User is logged in, Item in cart). |
     
     ## Test Steps
     1. [Step 1]
@@ -39,8 +39,8 @@ def generate_test_case(feature):
 
 def generate_test_ideas(feature):
     prompt = f"""
-    You are a QA Lead. Brainstorm 10 creative and rigorous test scenarios for: "{feature}".
-    Include happy paths, edge cases, and negative testing.
+    You are a QA Lead for DemoWebShop (https://demowebshop.tricentis.com/). Brainstorm 10 creative and rigorous test scenarios for: "{feature}".
+    Include happy paths, edge cases, and negative testing specific to this e-commerce site.
     
     Output as a Markdown table:
     | ID | Title | Test Type (Positive/Negative) | Description |
