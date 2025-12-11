@@ -61,8 +61,8 @@ def generer_email_simple():
 @pytest.mark.parametrize("qty, expected_outcome", [
     ("1", "valid"),         # Valeur normale
     ("5", "valid"),         # Limite haute supposée valide (ajustez si la limite réelle est différente)
-    ("10000", "invalid"),   # Valeur frontière basse (supposée invalide)
-    ("999999", "invalid"),  # Valeur impossible
+    ("9999", "invalid"),   # Valeur frontière basse (supposée invalide)
+    ("10000000000", "invalid"),  # Valeur impossible
 ])
 def test_bva_product_quantity(driver, qty, expected_outcome):
     """
@@ -181,7 +181,28 @@ def test_responsive_layout(driver, width, height, device_name):
 # TEST 4 : Intégration de la Newsletter (Votre Test Corrigé)
 # ======================================================================
 
-def test_newsletter_subscription(driver):
+BASE_URL = "http://demowebshop.tricentis.com/"  # URL à ajuster si nécessaire
+def generer_email_simple():
+    """ Simule la génération d'un e-mail unique pour le test. """
+    timestamp = int(time.time() * 1000)
+    return f"testuser_{timestamp}@mailinator.com"
+
+def step(description):
+    """ Simule une fonction d'étape pour les logs (souvent utilisée avec Allure). """
+    print(f"\n--- Étape: {description} ---")
+
+def slow(seconds):
+    """ Ajoute un délai (à utiliser avec parcimonie dans les vrais tests). """
+    time.sleep(seconds)
+
+# --- FIN SIMULATIONS ---
+
+
+# --- DÉBUT DE LA FONCTION DE TEST PRINCIPALE ---
+
+# Le paramètre 'driver' est généralement fourni par une fixture Pytest (souvent dans conftest.py)
+# qui initialise le navigateur (Chrome, Firefox, etc.).
+def test_newsletter_subscription(driver: webdriver.Chrome):
     """
     TC12 - Simuler l'inscription à la newsletter avec un e-mail aléatoire.
     """
@@ -190,16 +211,13 @@ def test_newsletter_subscription(driver):
     step(f"Open Home Page and Subscribe with email: {EMAIL_TEST}")
     driver.get(BASE_URL)
 
-    # 1. Saisir l'e-mail
     champ_email = driver.find_element(By.ID, "newsletter-email")
     champ_email.clear()
     champ_email.send_keys(EMAIL_TEST)
 
-    # 2. Cliquer sur "Subscribe"
     bouton_subscribe = driver.find_element(By.ID, "newsletter-subscribe-button")
     bouton_subscribe.click()
 
-    # 3. Vérification du message de résultat
     message_element = WebDriverWait(driver, 5).until(
         EC.visibility_of_element_located((By.CLASS_NAME, "newsletter-result"))
     )
@@ -207,7 +225,6 @@ def test_newsletter_subscription(driver):
     
     print(f"\n✅ Résultat affiché par le site : **{message_final}**")
 
-    # 4. Assertion Pytest
     assert "Thank you for signing up!" in message_final or \
            "Enter valid email" in message_final or \
            "is already registered" in message_final, \
