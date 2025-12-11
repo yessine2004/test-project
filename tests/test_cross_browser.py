@@ -3,7 +3,7 @@ from selenium import webdriver
 
 @pytest.fixture
 def driver(request):
-    browser = request.param  # récupère le navigateur depuis parametrize
+    browser = request.param  
 
     if browser == "chrome":
         options = webdriver.ChromeOptions()

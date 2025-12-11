@@ -3,101 +3,215 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import time
+import random
+import string
 
 BASE_URL = "https://demowebshop.tricentis.com/"
 
-# ==========================================
-# 1. Equivalence Partitioning (EP) & BVA
-# ==========================================
-# Feature: Product Quantity Input
-# Valid Partition: 1 - 100 (Assuming)
-# Invalid: 0, -1, 10000
+# -------------------
+# Pytest Fixture (Configuration du WebDriver)
+# -------------------
+
+@pytest.fixture(scope="session")
+def driver():
+    """
+    Initialise et configure le WebDriver (Chrome).
+    Le 'scope="session"' assure que le navigateur s'ouvre une seule fois pour tous les tests.
+    """
+    print("\n--- Initialisation du WebDriver ---")
+    service = Service(ChromeDriverManager().install())
+    options = webdriver.ChromeOptions()
+    # options.add_argument('--headless') # Décommenter pour exécution sans interface graphique
+    options.add_argument('--start-maximized')
+    
+    driver = webdriver.Chrome(service=service, options=options)
+    driver.implicitly_wait(10) 
+    
+    yield driver # Le test s'exécute ici
+    
+    # Après l'exécution de tous les tests de la session
+    print("\n--- Fermeture du WebDriver ---")
+    driver.quit()
+
+# -------------------
+# Utility Functions
+# -------------------
+
+def slow(seconds=1):
+    """Ralentir l'exécution pour observer le comportement (pour le développement)."""
+    time.sleep(seconds)
+
+def step(message):
+    """Afficher des messages d'étapes clairs dans les logs de test."""
+    print(f"\n------------------------------\n➡️  {message}\n------------------------------")
+    slow(0.5)
+
+def generer_email_simple():
+    """Génère un e-mail simple de type 'test_XXXXX@aleatoire.com'."""
+    suffixe = ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
+    return f"test_{suffixe}@aleatoire.com"
+
+# ======================================================================
+# TEST 1 : BVA – Boundary Value Analysis (Quantité produit)
+# ======================================================================
 
 @pytest.mark.parametrize("qty, expected_outcome", [
-    ("1", "valid"),       # Valid Min
-    ("5", "valid"),       # Valid Nominal
-    ("0", "invalid"),     # Below Min (Boundary)
-    ("-1", "invalid"),    # Negative (Invalid Partition)
+    ("1", "valid"),         # Valeur normale
+    ("5", "valid"),         # Limite haute supposée valide (ajustez si la limite réelle est différente)
+    ("10000", "invalid"),   # Valeur frontière basse (supposée invalide)
+    ("999999", "invalid"),  # Valeur impossible
 ])
 def test_bva_product_quantity(driver, qty, expected_outcome):
+    """
+    TC09 - Tester les valeurs limites de la quantité d'un produit (BVA).
+    """
+
+    step(f"Open product page ‘14.1-inch Laptop’ with qty = {qty}")
     driver.get(BASE_URL + "141-inch-laptop")
-    
-    qty_input = driver.find_element(By.CSS_SELECTOR, ".qty-input")
+    slow(2)
+
+    step("Enter Quantity")
+    # Utilisation de WebDriverWait pour s'assurer que l'élément est prêt
+    qty_input = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, ".qty-input"))
+    )
     qty_input.clear()
     qty_input.send_keys(qty)
-    
-    driver.find_element(By.CSS_SELECTOR, ".add-to-cart-button").click()
-    
-    time.sleep(1)
-    bar_notification = driver.find_elements(By.ID, "bar-notification")
-    
-    if expected_outcome == "valid":
-        # Should see success message
-        assert len(bar_notification) > 0 and "added to your shopping cart" in bar_notification[0].text
-    else:
-        # Site specific: Demowebshop forces default 1 or shows error.
-        # Check if error or if input was rejected/reset.
-        # For this demo site, 0 usually allows add but might fail at checkout or default to 1.
-        # We assert that we don't get the standard success or we get an error.
-        # Enhancing assertion for robustness:
-        error_msg = driver.find_elements(By.CSS_SELECTOR, ".p-error")
-        # Or check if content is visible
-        pass 
+    slow(2)
 
-# ==========================================
-# 2. State Transition Testing
-# ==========================================
-# Flow: Empty Cart -> Add Item -> Cart -> Checkout
+    step("Click Add to Cart")
+    driver.find_element(By.CSS_SELECTOR, ".add-to-cart-button").click()
+    slow(2)
+
+    step("Validate Outcome")
+    # Vérifier l'apparition de la notification verte/verte (#bar-notification)
+    bar_notification = driver.find_elements(By.ID, "bar-notification")
+
+    if expected_outcome == "valid":
+        # Vérifier que la notification est affichée et contient le texte de succès
+        assert len(bar_notification) > 0 and \
+               "added to your shopping cart" in bar_notification[0].text, \
+               f"Échec BVA: L'ajout au panier aurait dû réussir pour la quantité {qty}."
+    else:
+        # Vérifier que la notification verte n'est PAS affichée
+        # (Le site peut afficher une erreur rouge qui n'a pas cet ID)
+        assert len(bar_notification) == 0 or \
+               "added to your shopping cart" not in bar_notification[0].text, \
+               f"Échec BVA: L'ajout au panier aurait dû échouer pour la quantité {qty}."
+    slow(2)
+
+# ======================================================================
+# TEST 2 : State Transition – Checkout Process
+# ======================================================================
 
 def test_state_transition_checkout(driver):
-    # State 1: Start (Empty or Cleared Session)
-    driver.get(BASE_URL)
+    """
+    TC10 - Vérifier la transition d'états du processus de commande (Checkout).
     
-    # State 2: Item Added
-    driver.get(BASE_URL + "simple-computer") # Simple product
-    # Check if radio buttons exist (Simple computer usually has attributes)
-    # Using '14.1-inch Laptop' is safer
+    """
+
+    step("Navigate to a Product Page and Add to Cart")
     driver.get(BASE_URL + "141-inch-laptop")
     driver.find_element(By.CSS_SELECTOR, ".add-to-cart-button").click()
-    
+    # Attendre la notification "The product has been added to your shopping cart"
     WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.ID, "bar-notification")))
-    
-    # State 3: Shopping Cart
-    driver.get(BASE_URL + "cart")
-    assert "Shopping Cart" in driver.title
-    
-    # Check Terms (Transition Guard)
-    driver.find_element(By.ID, "termsofservice").click()
-    
-    # State 4: Checkout (Login Intercept)
-    driver.find_element(By.ID, "checkout").click()
-    assert "login" in driver.current_url or "checkout" in driver.current_url
 
-# ==========================================
-# 3. Configuration Testing (Browsers/Resolution)
-# ==========================================
-# Note: Configuration testing usually handled by tox/CI checking pytest params.
-# Here we simulate Resolution Config via window size.
+    step("Open Shopping Cart")
+    driver.get(BASE_URL + "cart")
+    assert "Shopping Cart" in driver.title, "Échec de la transition : Pas sur la page Panier."
+
+    step("Accept Terms and Proceed to Checkout")
+    # Utilisation de WebDriverWait pour cliquer sur une checkbox qui peut ne pas être cliquable immédiatement
+    WebDriverWait(driver, 5).until(
+        EC.element_to_be_clickable((By.ID, "termsofservice"))
+    ).click()
+    
+    driver.find_element(By.ID, "checkout").click()
+    slow(2)
+
+    step("Validate Redirect (Non-Logged In User)")
+    # Sans connexion, le site redirige vers la page de login ou d'enregistrement
+    current_url = driver.current_url
+    assert "login" in current_url or "register" in current_url, \
+           f"Échec de la transition: Redirection incorrecte. URL actuelle: {current_url}"
+    slow(2)
+    
+# ======================================================================
+# TEST 3 : Responsive UI – Test différentes résolutions
+# ======================================================================
 
 @pytest.mark.parametrize("width, height, device_name", [
     (1920, 1080, "Desktop"),
-    (375, 812, "iPhone X"), 
-    (768, 1024, "iPad")
+    (375, 812, "iPhone X"),
+    (768, 1024, "iPad"),
 ])
 def test_responsive_layout(driver, width, height, device_name):
+    """
+    TC11 - Vérifier que l'affichage s'adapte selon la résolution de l'écran.
+    """
+
+    step(f"Set screen resolution for {device_name}: {width}x{height}")
     driver.set_window_size(width, height)
+    slow(1)
+
     driver.get(BASE_URL)
+    slow(2)
+
+    step("Validate responsive layout")
+
+    # La logique est basée sur la largeur. Le menu mobile s'active généralement sous un certain seuil.
+    # Nous allons vérifier la présence/absence du menu standard (.top-menu).
     
-    # Check if Hamburger menu appears on mobile
-    # DemoWebShop might use a specific class for mobile menu
-    if width < 980: # Typical breakpoint
-        # Look for mobile menu toggle
-        mobile_menu = driver.find_elements(By.CSS_SELECTOR, ".header-menubox .list") 
-        # Actually DemoWebShop is older, might not be fully responsive in modern sense 'hamburger'
-        # But we verify page loads without horizontal scroll or specific element visibility
-        pass
-    else:
-        # Verify Full Menu visible
-        full_menu = driver.find_element(By.CSS_SELECTOR, ".top-menu")
-        assert full_menu.is_displayed()
+    top_menu_elements = driver.find_elements(By.CSS_SELECTOR, ".top-menu")
+
+    if width < 980: 
+        # Pour les petits écrans, le menu principal doit être masqué (ou géré par un hamburger)
+        assert len(top_menu_elements) == 0 or not top_menu_elements[0].is_displayed(), \
+               f"Échec Responsive: Le menu Desktop est visible sur {device_name} ({width}px)."
+    else: 
+        # Pour les grands écrans, le menu doit être affiché
+        assert len(top_menu_elements) > 0 and top_menu_elements[0].is_displayed(), \
+               f"Échec Responsive: Le menu Desktop est masqué sur {device_name} ({width}px)."
+    slow(2)
+
+# ======================================================================
+# TEST 4 : Intégration de la Newsletter (Votre Test Corrigé)
+# ======================================================================
+
+def test_newsletter_subscription(driver):
+    """
+    TC12 - Simuler l'inscription à la newsletter avec un e-mail aléatoire.
+    """
+    EMAIL_TEST = generer_email_simple()
+
+    step(f"Open Home Page and Subscribe with email: {EMAIL_TEST}")
+    driver.get(BASE_URL)
+
+    # 1. Saisir l'e-mail
+    champ_email = driver.find_element(By.ID, "newsletter-email")
+    champ_email.clear()
+    champ_email.send_keys(EMAIL_TEST)
+
+    # 2. Cliquer sur "Subscribe"
+    bouton_subscribe = driver.find_element(By.ID, "newsletter-subscribe-button")
+    bouton_subscribe.click()
+
+    # 3. Vérification du message de résultat
+    message_element = WebDriverWait(driver, 5).until(
+        EC.visibility_of_element_located((By.CLASS_NAME, "newsletter-result"))
+    )
+    message_final = message_element.text
+    
+    print(f"\n✅ Résultat affiché par le site : **{message_final}**")
+
+    # 4. Assertion Pytest
+    assert "Thank you for signing up!" in message_final or \
+           "Enter valid email" in message_final or \
+           "is already registered" in message_final, \
+           f"Échec Newsletter: Message de résultat inattendu: {message_final}"
+    
+    print("Test réussi : L'action d'inscription a retourné un message valide.")
+    slow(2)
